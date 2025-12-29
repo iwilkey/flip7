@@ -13,13 +13,17 @@
 <head>
     <meta charset="UTF-8" />
     <title>Let's Play Flip 7™</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <style>
         html,
+        
         body {
             height: 100%;
             margin: 0;
         }
-
+        body {
+            min-height: 100dvh;
+        }
         body {
             background: #111;
             color: #eee;
@@ -34,6 +38,13 @@
             white-space: pre-wrap;
             overflow-y: auto;
             flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #console-content {
+            margin-top: auto;
+            padding-bottom: 12px;
         }
 
         #input,
@@ -61,7 +72,7 @@
 
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 6px;
         }
 
@@ -108,35 +119,76 @@
         .done-btn:hover {
             background: #2f7a2f;
         }
+
+        #input-bar {
+            position: sticky;
+            bottom: 0;
+            background: #111;
+        }
+
     </style>
 </head>
 
 <body>
-    <div id="console"></div>
-    <input id="input" autocomplete="off" autofocus />
-    <div id="button-input"></div>
+    <div id="console"><div id="console-content"></div></div>
+    <div id="input-bar">
+        <input id="input" autocomplete="off" />
+        <div id="button-input"></div>
+    </div>
     <script>
-        const console = document.getElementById("console");
-        const inpel = document.getElementById("input");
-        const butinpel = document.getElementById("button-input");
-        function stb() {
+
+        const F_CONSOLE = document.getElementById("console");
+        const F_CONSOLE_CONTENT = document.getElementById("console-content");
+        const F_INPUT_ELEMENT = document.getElementById("input");
+        const F_BUTTON_ELEMENT = document.getElementById("button-input");
+        const F_INPUT_BAR = document.getElementById("input-bar");
+        const F_IS_TOUCH_DEVICE = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        let tqueue = Promise.resolve();
+
+        window.addEventListener("orientationchange", () => {
+            setTimeout(ensureScroll, 300);
+        });
+
+        if(window.visualViewport) {
+            window.visualViewport.addEventListener("resize", () => {
+                setTimeout(ensureScroll, 50);
+            });
+        }
+
+        function ensureScroll() {
             requestAnimationFrame(() => {
-                console.scrollTop = console.scrollHeight;
+                F_CONSOLE.scrollTop = F_CONSOLE.scrollHeight;
+            });
+        }
+
+        function renderq(text, element, delay = 16) {
+            return new Promise(resolve => {
+                let i = 0;
+                function typeChar() {
+                    if(i < text.length) {
+                        element.textContent += text[i];
+                        i++;
+                        ensureScroll();
+                        setTimeout(typeChar, delay);
+                    } else {
+                        resolve();
+                    }
+                }
+                typeChar();
             });
         }
 
         function print(text = "") {
-            console.textContent += text + "\n";
-            stb();
+            tqueue = tqueue.then(() => renderq(text + "\n", F_CONSOLE_CONTENT));
         }
 
         function printi(text = "") {
-            console.textContent += text;
-            stb();
+            tqueue = tqueue.then(() => renderq(text, F_CONSOLE_CONTENT));
         }
 
         function cls() {
-            console.textContent = "";
+            F_CONSOLE_CONTENT.textContent = "";
         }
 
         let state = "INIT_PLAYERS";
@@ -166,10 +218,10 @@
             sc = [];
             r = 0;
             cpp = 0;
-            inpel.disabled = false;
-            butinpel.innerHTML = "";
-            butinpel.style.display = "none";
-            inpel.style.display = "block";
+            F_INPUT_ELEMENT.disabled = false;
+            F_BUTTON_ELEMENT.innerHTML = "";
+            F_BUTTON_ELEMENT.style.display = "none";
+            F_INPUT_ELEMENT.style.display = "block";
             print("Let's play Flip 7™");
             print(" ");
             print("Copyright © 2025 Ian Wilkey");
@@ -182,18 +234,19 @@
 
         bootstrap();
 
-        inpel.addEventListener("keydown", e => {
+        F_INPUT_ELEMENT.addEventListener("keydown", e => {
             if(e.key !== "Enter") return;
-            const input = inpel.value;
-            inpel.value = "";
+            e.preventDefault();
+            const input = F_INPUT_ELEMENT.value;
+            F_INPUT_ELEMENT.value = "";
             print(input);
             inp(input);
         });
 
         function scards() {
-            inpel.style.display = "none";
-            butinpel.style.display = "block";
-            butinpel.innerHTML = "";
+            F_INPUT_ELEMENT.style.display = "none";
+            F_BUTTON_ELEMENT.style.display = "block";
+            F_BUTTON_ELEMENT.innerHTML = "";
             scc.clear();
             busted = false;
             const grid = document.createElement("div");
@@ -227,14 +280,14 @@
             };
             grid.appendChild(bustBtn);
             grid.appendChild(doneBtn);
-            butinpel.appendChild(grid);
-            stb();
+            F_BUTTON_ELEMENT.appendChild(grid);
+            ensureScroll();
         }
 
         function smbut() {
-            inpel.style.display = "none";
-            butinpel.style.display = "block";
-            butinpel.innerHTML = "";
+            F_INPUT_ELEMENT.style.display = "none";
+            F_BUTTON_ELEMENT.style.display = "block";
+            F_BUTTON_ELEMENT.innerHTML = "";
             const grid = document.createElement("div");
             grid.className = "menu-grid";
             const actions = [
@@ -248,8 +301,7 @@
                     sstand();
                     menu();
                 }],
-                ["New Game", rscores],
-                ["Finish", di]
+                ["New Game", rscores]
             ];
             for(const [label, fn] of actions) {
                 const btn = document.createElement("button");
@@ -258,14 +310,14 @@
                 btn.onclick = fn;
                 grid.appendChild(btn);
             }
-            butinpel.appendChild(grid);
-            stb();
+            F_BUTTON_ELEMENT.appendChild(grid);
+            ensureScroll();
         }
 
         function hide() {
-            butinpel.style.display = "none";
-            inpel.style.display = "block";
-            inpel.focus();
+            F_BUTTON_ELEMENT.style.display = "none";
+            F_INPUT_ELEMENT.style.display = "block";
+            F_INPUT_ELEMENT.focus();
         }
 
         function frinp() {
@@ -324,6 +376,9 @@
                     printi(`Player ${cpp + 1} name: `);
                 } else {
                     state = "MENU";
+                    if(F_IS_TOUCH_DEVICE) {
+                        F_INPUT_ELEMENT.blur();
+                    }
                     menu();
                 }
             }
@@ -348,7 +403,6 @@
         function menu() {
             print(" ");
             print("What would you like to do?");
-            print(" ");
             smbut();
         }
 
@@ -362,10 +416,6 @@
                 );
         }
 
-        function di() {
-            inpel.disabled = true;
-            butinpel.innerHTML = "";
-        }
     </script>
 </body>
 
