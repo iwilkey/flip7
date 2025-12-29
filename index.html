@@ -1,0 +1,372 @@
+<!--
+    Flip 7 Console Web Applet
+
+    SPDX-License-Identifier: MIT | Copyright © 2025 Ian Wilkey
+
+    You may use, modify, and redistribute this software with attribution.
+    This software is provided "as is", without warranty of any kind.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Let's Play Flip 7™</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: #111;
+            color: #eee;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #console {
+            padding: 16px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        #input,
+        #button-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border: none;
+            outline: none;
+            font-family: monospace;
+            font-size: 16px;
+            background: #222;
+            color: #eee;
+        }
+
+        #button-input {
+            display: none;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 6px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .card-btn,
+        .bust-btn,
+        .done-btn,
+        .menu-btn {
+            padding: 12px 0;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: #333;
+            color: #eee;
+            transition: background 0.15s;
+        }
+
+        .menu-btn:hover {
+            background: #444;
+        }
+
+        .card-btn.selected {
+            background: #666;
+        }
+
+        .card-btn:hover:not(.selected) {
+            background: #444;
+        }
+
+        .bust-btn {
+            grid-column: 1 / -1;
+            background: #7a2222;
+        }
+
+        .bust-btn:hover {
+            background: #9a2a2a;
+        }
+
+        .done-btn {
+            grid-column: 1 / -1;
+            background: #225a22;
+        }
+
+        .done-btn:hover {
+            background: #2f7a2f;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="console"></div>
+    <input id="input" autocomplete="off" autofocus />
+    <div id="button-input"></div>
+    <script>
+        const console = document.getElementById("console");
+        const inpel = document.getElementById("input");
+        const butinpel = document.getElementById("button-input");
+        function stb() {
+            requestAnimationFrame(() => {
+                console.scrollTop = console.scrollHeight;
+            });
+        }
+
+        function print(text = "") {
+            console.textContent += text + "\n";
+            stb();
+        }
+
+        function printi(text = "") {
+            console.textContent += text;
+            stb();
+        }
+
+        function cls() {
+            console.textContent = "";
+        }
+
+        let state = "INIT_PLAYERS";
+        let p = 0;
+        let names = [];
+        let sc = [];
+        let wins = {};
+        let r = 0;
+        let cpp = 0;
+        let scc = new Set();
+        let busted = false;
+
+        function rscores() {
+            sc = new Array(p).fill(0);
+            r = 0;
+            cpp = 0;
+            cls();
+            print("New game started.");
+            menu();
+        }
+
+        function bootstrap() {
+            cls();
+            state = "INIT_PLAYERS";
+            p = 0;
+            names = [];
+            sc = [];
+            r = 0;
+            cpp = 0;
+            inpel.disabled = false;
+            butinpel.innerHTML = "";
+            butinpel.style.display = "none";
+            inpel.style.display = "block";
+            print("Let's play Flip 7™");
+            print(" ");
+            print("Copyright © 2025 Ian Wilkey");
+            print("Licensed under the MIT License; you may use, modify, and redistribute this software with attribution.");
+            print(" ");
+            print("This is intentionally a console-style application with minimal UI. When applicable, use the text field at the bottom and press Enter to submit input.");
+            print(" ");
+            printi("How many players? ");
+        }
+
+        bootstrap();
+
+        inpel.addEventListener("keydown", e => {
+            if(e.key !== "Enter") return;
+            const input = inpel.value;
+            inpel.value = "";
+            print(input);
+            inp(input);
+        });
+
+        function scards() {
+            inpel.style.display = "none";
+            butinpel.style.display = "block";
+            butinpel.innerHTML = "";
+            scc.clear();
+            busted = false;
+            const grid = document.createElement("div");
+            grid.className = "button-grid";
+            for(let i = 0; i <= 12; i++) {
+                const btn = document.createElement("button");
+                btn.textContent = i;
+                btn.className = "card-btn";
+                btn.onclick = () => {
+                    btn.classList.toggle("selected");
+                    btn.classList.contains("selected")
+                        ? scc.add(i)
+                        : scc.delete(i);
+                };
+                grid.appendChild(btn);
+            }
+            const bustBtn = document.createElement("button");
+            bustBtn.textContent = "BUST";
+            bustBtn.className = "bust-btn";
+            bustBtn.onclick = () => {
+                busted = true;
+                print("BUST");
+                frinp();
+            };
+            const doneBtn = document.createElement("button");
+            doneBtn.textContent = "DONE";
+            doneBtn.className = "done-btn";
+            doneBtn.onclick = () => {
+                print([...scc].sort((a, b) => a - b).join(" "));
+                frinp();
+            };
+            grid.appendChild(bustBtn);
+            grid.appendChild(doneBtn);
+            butinpel.appendChild(grid);
+            stb();
+        }
+
+        function smbut() {
+            inpel.style.display = "none";
+            butinpel.style.display = "block";
+            butinpel.innerHTML = "";
+            const grid = document.createElement("div");
+            grid.className = "menu-grid";
+            const actions = [
+                ["New Round", () => {
+                    cpp = 0;
+                    state = "ROUND_INPUT";
+                    printi(`Round ${r + 1}: ${names[cpp]}'s card values: `);
+                    scards();
+                }],
+                ["See Standings", () => {
+                    sstand();
+                    menu();
+                }],
+                ["New Game", rscores],
+                ["Finish", di]
+            ];
+            for(const [label, fn] of actions) {
+                const btn = document.createElement("button");
+                btn.textContent = label;
+                btn.className = "menu-btn";
+                btn.onclick = fn;
+                grid.appendChild(btn);
+            }
+            butinpel.appendChild(grid);
+            stb();
+        }
+
+        function hide() {
+            butinpel.style.display = "none";
+            inpel.style.display = "block";
+            inpel.focus();
+        }
+
+        function frinp() {
+            if (!busted) {
+                let sum = 0;
+                for(const v of scc) sum += v;
+                sc[cpp] += sum;
+                if(scc.size >= 7) sc[cpp] += 15;
+            }
+            cpp++;
+            hide();
+            if(cpp < p) {
+                printi(`Round ${r + 1}: ${names[cpp]}'s card values: `);
+                scards();
+            } else {
+                sstand();
+                vwin();
+            }
+        }
+
+        function inp(input) {
+            if(state === "INIT_PLAYERS") {
+                const n = Number(input);
+                if(!Number.isInteger(n)) {
+                    print("Invalid input. Please enter a number between 1 and 12.");
+                    printi("How many players? ");
+                    return;
+                }
+                if(n < 1 || n > 12) {
+                    print("Invalid player count. Must be between 1 and 12.");
+                    printi("How many players? ");
+                    return;
+                }
+                p = n;
+                sc = new Array(p).fill(0);
+                names = [];
+                cpp = 0;
+                state = "GET_NAMES";
+                printi(`Player ${cpp + 1} name: `);
+            } else if (state === "GET_NAMES") {
+                const name = input.trim();
+                if(name.length === 0) {
+                    print("Invalid name. Please enter at least one non-whitespace character.");
+                    printi(`Player ${cpp + 1} name: `);
+                    return;
+                }
+                if(names.includes(name)) {
+                    print("That name is already taken. Please enter a unique name.");
+                    printi(`Player ${cpp + 1} name: `);
+                    return;
+                }
+                names.push(name);
+                wins[name] ??= 0;
+                cpp++;
+                if(cpp < p) {
+                    printi(`Player ${cpp + 1} name: `);
+                } else {
+                    state = "MENU";
+                    menu();
+                }
+            }
+        }
+
+        function vwin() {
+            let max = 0, idx = -1;
+            for(let i = 0; i < sc.length; i++) {
+                if (sc[i] > max) { max = sc[i]; idx = i; }
+            }
+            if(max >= 200) {
+                print(`${names[idx]} wins.`);
+                wins[names[idx]]++;
+                rscores();
+            } else {
+                r++;
+                state = "MENU";
+                menu();
+            }
+        }
+
+        function menu() {
+            print(" ");
+            print("What would you like to do?");
+            print(" ");
+            smbut();
+        }
+
+        function sstand() {
+            print("Current Standings:");
+            names
+                .map(n => [sc[names.indexOf(n)], n])
+                .sort((a, b) => b[0] - a[0])
+                .forEach(([score, name]) =>
+                    print(`${name}: ${score} (wins: ${wins[name]})`)
+                );
+        }
+
+        function di() {
+            inpel.disabled = true;
+            butinpel.innerHTML = "";
+        }
+    </script>
+</body>
+
+</html>
