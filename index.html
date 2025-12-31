@@ -14,50 +14,154 @@
     <meta charset="UTF-8" />
     <title>Let's Play Flip 7™</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        html,
-        
-        body {
-            height: 100%;
-            margin: 0;
+
+        :root {
+            --bg-primary: #0a0a0c;
+            --bg-secondary: #111114;
+            --bg-tertiary: #18181c;
+            --bg-card: #1a1a1f;
+            --bg-hover: #242429;
+            --text-primary: #e8e8ed;
+            --text-secondary: #9898a0;
+            --text-muted: #5a5a64;
+            --accent-cyan: #00d4aa;
+            --accent-cyan-dim: #00d4aa20;
+            --accent-red: #ff4757;
+            --accent-red-dim: #ff475720;
+            --accent-green: #2ed573;
+            --accent-green-dim: #2ed57320;
+            --accent-purple: #a55eea;
+            --border-color: #2a2a32;
+            --glow-cyan: 0 0 20px #00d4aa40, 0 0 40px #00d4aa20;
+            --glow-red: 0 0 20px #ff475740, 0 0 40px #ff475720;
+            --glow-green: 0 0 20px #2ed57340, 0 0 40px #2ed57320;
+            --font: 'Source Code Pro', monospace;
         }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
         body {
             min-height: 100dvh;
-        }
-        body {
-            background: #111;
-            color: #eee;
-            font-family: monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: linear-gradient(180deg, #39393975 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         #console {
-            padding: 16px;
+            padding: 20px;
+            padding-bottom: 0;
             white-space: pre-wrap;
             overflow-y: auto;
             flex: 1;
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 1;
+            font-size: 16px;
+            line-height: 1.7;
+            letter-spacing: 0.02em;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        #console::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #console::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #console::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        #console::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
 
         #console-content {
             margin-top: auto;
-            padding-bottom: 12px;
+            padding-bottom: 0px;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        #input,
-        #button-input {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: var(--glow-cyan); }
+            50% { box-shadow: 0 0 30px #00d4aa60, 0 0 60px #00d4aa30; }
+        }
+
+        #input-bar {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 20%);
+            padding: 20px;
+            padding-top: 16px;
+            z-index: 10;
+        }
+
+        #input {
             width: 100%;
-            box-sizing: border-box;
-            padding: 8px;
-            border: none;
+            padding: 0 16px;
+            height: 52px;
+            line-height: 52px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             outline: none;
-            font-family: monospace;
+            font-family: var(--font);
             font-size: 16px;
-            background: #222;
-            color: #eee;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            caret-color: var(--accent-cyan);
+        }
+
+        #input:focus {
+            border-color: var(--text-primary);
+            box-shadow: none;
+            background: var(--bg-tertiary);
+        }
+
+        #input::placeholder {
+            color: var(--text-muted);
         }
 
         #button-input {
@@ -66,64 +170,216 @@
 
         .button-grid {
             display: grid;
-            grid-template-columns: repeat(13, 1fr);
-            gap: 6px;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        @media (max-width: 500px) {
+            .button-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
+            gap: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .card-btn,
         .bust-btn,
         .done-btn,
         .menu-btn {
-            padding: 12px 0;
-            font-size: 16px;
-            border-radius: 6px;
-            border: none;
+            padding: 16px 0;
+            font-size: 15px;
+            font-family: var(--font);
+            font-weight: 500;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
             cursor: pointer;
-            background: #333;
-            color: #eee;
-            transition: background 0.15s;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .menu-btn:hover {
-            background: #444;
+        .card-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, var(--accent-cyan-dim) 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .card-btn:hover::before {
+            opacity: 1;
+        }
+
+        .card-btn:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
         }
 
         .card-btn.selected {
-            background: #666;
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+            font-weight: 600;
         }
 
-        .card-btn:hover:not(.selected) {
-            background: #444;
+        .card-btn.selected::before {
+            display: none;
+        }
+
+        .menu-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan-dim), transparent);
+            transition: left 0.4s ease;
+        }
+
+        .menu-btn:hover::before {
+            left: 100%;
+        }
+
+        .menu-btn:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-hover);
+            color: var(--accent-cyan);
         }
 
         .bust-btn {
             grid-column: 1 / -1;
-            background: #7a2222;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            margin-top: 8px;
         }
 
         .bust-btn:hover {
-            background: #9a2a2a;
+            background: var(--accent-red);
+            color: var(--bg-primary);
+            box-shadow: var(--glow-red);
+            transform: translateY(-2px);
         }
 
         .done-btn {
             grid-column: 1 / -1;
-            background: #225a22;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
         }
 
         .done-btn:hover {
-            background: #2f7a2f;
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            box-shadow: var(--glow-green);
+            transform: translateY(-2px);
         }
 
-        #input-bar {
-            position: sticky;
-            bottom: 0;
-            background: #111;
+        .title {
+            color: var(--accent-cyan);
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: var(--accent-cyan);
+            animation: pulse 1s infinite;
+            margin-left: 2px;
+            vertical-align: text-bottom;
+        }
+
+        ::selection {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            #input-bar {
+                padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            }
+        }
+
+        #button-input {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .card-btn:active,
+        .menu-btn:active,
+        .bust-btn:active,
+        .done-btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (hover: none) {
+            .card-btn:hover::before {
+                opacity: 0;
+            }
+            
+            .card-btn:hover {
+                border-color: var(--border-color);
+                transform: none;
+            }
+            
+            .card-btn.selected:hover {
+                border-color: var(--accent-cyan);
+            }
+            
+            .menu-btn:hover::before {
+                left: -100%;
+            }
+            
+            .menu-btn:hover {
+                border-color: var(--border-color);
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+            }
+            
+            .bust-btn:hover {
+                background: var(--bg-card);
+                color: var(--accent-red);
+                box-shadow: none;
+                transform: none;
+            }
+            
+            .done-btn:hover {
+                background: var(--bg-card);
+                color: var(--accent-green);
+                box-shadow: none;
+                transform: none;
+            }
         }
 
     </style>
@@ -132,19 +388,25 @@
 <body>
     <div id="console"><div id="console-content"></div></div>
     <div id="input-bar">
-        <input id="input" autocomplete="off" />
+        <input id="input" autocomplete="off" placeholder="Type here..." />
         <div id="button-input"></div>
     </div>
     <script>
 
-        const F_CONSOLE = document.getElementById("console");
+        const F_COLOR_NORMAL   = 0xffffff
+        const F_COLOR_INFO     = 0xaaaaaa
+        const F_COLOR_QUESTION = 0x00ffff
+        const F_COLOR_ERROR    = 0xff0000
+
+        const F_CONSOLE         = document.getElementById("console");
         const F_CONSOLE_CONTENT = document.getElementById("console-content");
-        const F_INPUT_ELEMENT = document.getElementById("input");
-        const F_BUTTON_ELEMENT = document.getElementById("button-input");
-        const F_INPUT_BAR = document.getElementById("input-bar");
+        const F_INPUT_ELEMENT   = document.getElementById("input");
+        const F_BUTTON_ELEMENT  = document.getElementById("button-input");
+        const F_INPUT_BAR       = document.getElementById("input-bar");
         const F_IS_TOUCH_DEVICE = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        let tqueue = Promise.resolve();
+        let ts = 16;
+        let tq = Promise.resolve();
 
         window.addEventListener("orientationchange", () => {
             setTimeout(ensureScroll, 300);
@@ -162,15 +424,19 @@
             });
         }
 
-        function renderq(text, element, delay = 16) {
+        function renderq(text, element, delay = 16, color = 0xffffff) {
             return new Promise(resolve => {
+                const ss = document.createElement("span");
+                const hex = "#" + color.toString(16).padStart(6, "0");
+                ss.style.color = hex;
+                element.appendChild(ss);
                 let i = 0;
                 function typeChar() {
                     if(i < text.length) {
-                        element.textContent += text[i];
+                        ss.textContent += text[i];
                         i++;
                         ensureScroll();
-                        setTimeout(typeChar, delay);
+                        setTimeout(typeChar, ts);
                     } else {
                         resolve();
                     }
@@ -179,26 +445,32 @@
             });
         }
 
-        function print(text = "") {
-            tqueue = tqueue.then(() => renderq(text + "\n", F_CONSOLE_CONTENT));
+        function print(text = "", color = 0xffffff) {
+            tq = tq.then(() => {
+                ts = 16;
+                return renderq(text + "\n", F_CONSOLE_CONTENT, 16, color);
+            });
         }
 
-        function printi(text = "") {
-            tqueue = tqueue.then(() => renderq(text, F_CONSOLE_CONTENT));
+        function printi(text = "", color = 0xffffff) {
+            tq = tq.then(() => {
+                ts = 16;
+                return renderq(text, F_CONSOLE_CONTENT, 16, color);
+            });
         }
 
         function cls() {
             F_CONSOLE_CONTENT.textContent = "";
         }
 
-        let state = "INIT_PLAYERS";
-        let p = 0;
-        let names = [];
-        let sc = [];
-        let wins = {};
-        let r = 0;
-        let cpp = 0;
-        let scc = new Set();
+        let state  = "INIT_PLAYERS";
+        let names  = [];
+        let sc     = [];
+        let wins   = {};
+        let p      = 0;
+        let r      = 0;
+        let cpp    = 0;
+        let scc    = new Set();
         let busted = false;
 
         function rscores() {
@@ -222,17 +494,23 @@
             F_BUTTON_ELEMENT.innerHTML = "";
             F_BUTTON_ELEMENT.style.display = "none";
             F_INPUT_ELEMENT.style.display = "block";
-            print("Let's play Flip 7™");
+            print("> Let's play Flip 7™", F_COLOR_QUESTION);
             print(" ");
-            print("Copyright © 2025 Ian Wilkey");
-            print("Licensed under the MIT License; you may use, modify, and redistribute this software with attribution.");
+            print("Copyright © 2025 Ian Wilkey", F_COLOR_INFO);
+            print("Licensed under the MIT License; you may use, modify, and redistribute this software with attribution.", F_COLOR_INFO);
             print(" ");
-            print("This is intentionally a console-style application with minimal UI. When applicable, use the text field at the bottom and press Enter to submit input.");
+            print("This is intentionally a console-style application with minimal UI. When applicable, use the text field at the bottom and press Enter to submit input.\n\nYou may tap the console to render text faster.", F_COLOR_INFO);
             print(" ");
-            printi("How many players? ");
+            printi("> How many players? ", F_COLOR_QUESTION);
         }
 
         bootstrap();
+
+        F_CONSOLE.addEventListener("click", () => {
+            if(ts === 16) {
+                ts = 1;
+            }
+        });
 
         F_INPUT_ELEMENT.addEventListener("keydown", e => {
             if(e.key !== "Enter") return;
@@ -275,6 +553,12 @@
             doneBtn.textContent = "DONE";
             doneBtn.className = "done-btn";
             doneBtn.onclick = () => {
+                if(scc.size === 0) {
+                    print(" ");
+                    print("No cards selected!", 0xff4757);
+                    printi(`> Round ${r + 1} | What happened to ${names[cpp]}? `, F_COLOR_QUESTION);
+                    return;
+                }
                 print([...scc].sort((a, b) => a - b).join(" "));
                 frinp();
             };
@@ -294,7 +578,8 @@
                 ["New Round", () => {
                     cpp = 0;
                     state = "ROUND_INPUT";
-                    printi(`Round ${r + 1}: ${names[cpp]}'s card values: `);
+                    print(" ");
+                    printi(`> Round ${r + 1} | What happened to ${names[cpp]}? `, F_COLOR_QUESTION);
                     scards();
                 }],
                 ["See Standings", () => {
@@ -321,7 +606,7 @@
         }
 
         function frinp() {
-            if (!busted) {
+            if(!busted) {
                 let sum = 0;
                 for(const v of scc) sum += v;
                 sc[cpp] += sum;
@@ -330,7 +615,7 @@
             cpp++;
             hide();
             if(cpp < p) {
-                printi(`Round ${r + 1}: ${names[cpp]}'s card values: `);
+                printi(`> Round ${r + 1} | What happened to ${names[cpp]}? `, F_COLOR_QUESTION);
                 scards();
             } else {
                 sstand();
@@ -342,13 +627,13 @@
             if(state === "INIT_PLAYERS") {
                 const n = Number(input);
                 if(!Number.isInteger(n)) {
-                    print("Invalid input. Please enter a number between 1 and 12.");
-                    printi("How many players? ");
+                    print("Invalid input. Please enter a number between 2 and 12.", F_COLOR_ERROR);
+                    printi("> How many players? ", F_COLOR_QUESTION);
                     return;
                 }
-                if(n < 1 || n > 12) {
-                    print("Invalid player count. Must be between 1 and 12.");
-                    printi("How many players? ");
+                if(n < 2 || n > 12) {
+                    print("Invalid player count. Must be between 2 and 12.", F_COLOR_ERROR);
+                    printi("> How many players? ", F_COLOR_QUESTION);
                     return;
                 }
                 p = n;
@@ -356,25 +641,27 @@
                 names = [];
                 cpp = 0;
                 state = "GET_NAMES";
-                printi(`Player ${cpp + 1} name: `);
+                printi(`> What is player ${cpp + 1}'s name? `, F_COLOR_QUESTION);
             } else if (state === "GET_NAMES") {
                 const name = input.trim();
                 if(name.length === 0) {
-                    print("Invalid name. Please enter at least one non-whitespace character.");
-                    printi(`Player ${cpp + 1} name: `);
+                    print("Invalid name. Please enter at least one non-whitespace character.", F_COLOR_ERROR);
+                    printi(`> What is player ${cpp + 1}'s name? `, F_COLOR_QUESTION);
                     return;
                 }
                 if(names.includes(name)) {
-                    print("That name is already taken. Please enter a unique name.");
-                    printi(`Player ${cpp + 1} name: `);
+                    print("That name is already taken. Please enter a unique name.", F_COLOR_ERROR);
+                    printi(`> What is player ${cpp + 1}'s name? `, F_COLOR_QUESTION);
                     return;
                 }
                 names.push(name);
                 wins[name] ??= 0;
                 cpp++;
                 if(cpp < p) {
-                    printi(`Player ${cpp + 1} name: `);
+                    printi(`> What is player ${cpp + 1}'s name? `, F_COLOR_QUESTION);
                 } else {
+                    print("> Let's play!", F_COLOR_QUESTION);
+                    print(`\nPlease note that this application assumes all participants are adhering to the official Flip 7™ rules, including correct usage of special cards, bust identification, and turn order protocols. This tool is designed exclusively for final score recording and does not validate or enforce gameplay mechanics.\n\nThe system does automatically apply a +15 point bonus to any player's round consisting of seven or more cards.`, F_COLOR_INFO);
                     state = "MENU";
                     if(F_IS_TOUCH_DEVICE) {
                         F_INPUT_ELEMENT.blur();
@@ -387,10 +674,10 @@
         function vwin() {
             let max = 0, idx = -1;
             for(let i = 0; i < sc.length; i++) {
-                if (sc[i] > max) { max = sc[i]; idx = i; }
+                if(sc[i] > max) { max = sc[i]; idx = i; }
             }
             if(max >= 200) {
-                print(`${names[idx]} wins.`);
+                print(`> ${names[idx]} wins.`, F_COLOR_QUESTION);
                 wins[names[idx]]++;
                 rscores();
             } else {
@@ -402,18 +689,35 @@
 
         function menu() {
             print(" ");
-            print("What would you like to do?");
+            print("> What would you like to do?");
             smbut();
         }
 
         function sstand() {
-            print("Current Standings:");
-            names
-                .map(n => [sc[names.indexOf(n)], n])
-                .sort((a, b) => b[0] - a[0])
-                .forEach(([score, name]) =>
-                    print(`${name}: ${score} (wins: ${wins[name]})`)
-                );
+            print(" ");
+            print("**************************************");
+            const ss = names
+                .map(n => [sc[names.indexOf(n)], n, wins[n]])
+                .sort((a, b) => b[0] - a[0]);
+            const la = ["1st", "2nd", "3rd"];
+            const col = [0xffd700, 0xc0c0c0, 0xcd7f32];
+            const mll = Math.max(...ss.map((_, i) => {
+                const ll = i < 3 ? la[i] : (i === ss.length - 1 && ss.length > 3 ? "Last" : `${i + 1}th`);
+                return ll.length;
+            }));
+            const mnl = Math.max(...ss.map(([, name]) => name.length));
+            const msl = Math.max(...ss.map(([score]) => String(score).length));
+            const mwl = Math.max(...ss.map(([,, w]) => String(w).length));
+            ss.forEach(([score, name, w], i) => {
+                const lll = i < 3 ? la[i] : (i === ss.length - 1 && ss.length > 3 ? "Last" : `${i + 1}th`);
+                const coll = i < 3 ? col[i] : 0xffffff;
+                const lpa = lll.padEnd(mll);
+                const npa = name.padEnd(mnl);
+                const sp = String(score).padStart(msl);
+                const wp = String(w).padStart(mwl);
+                print(`[${lpa}] ${npa} | ${sp} pts | ${wp} wins`, coll);
+            });
+            print("**************************************");
         }
 
     </script>
